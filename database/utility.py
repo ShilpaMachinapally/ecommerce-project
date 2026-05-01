@@ -18,20 +18,28 @@ def checkUserExists(email:str):
         return False
     
 # insert user data into db
-def addUser(name: str, email: str, phone_number: str, password: str, profile_image: str = None):
+# def addUser(name: str, email: str, phone_number: str, password: str, profile_image: str = None):
+def addUser(name, email, phone_number, password, profile_image):
     db = databaseConfig()
     cursor = db.cursor()
+    try:
 
-    query = """
-        INSERT INTO users
-        (NAME, EMAIL, PHONE_NUMBER, PASSWORD, PROFILE_IMAGE)
-        VALUES (%s, %s, %s, %s, %s)
-    """
+        query = """
+            INSERT INTO users
+            (NAME, EMAIL, PHONE_NUMBER, PASSWORD, PROFILE_IMAGE)
+            VALUES (%s, %s, %s, %s, %s)
+        """
 
-    cursor.execute(query, (name, email, phone_number, password, profile_image))
-    db.commit()
-    cursor.close()
-    db.close()
+        cursor.execute(query, (name, email, phone_number, password, profile_image))
+        db.commit()
+
+    except Exception as e:
+        db.rollback()   # 🔥 VERY IMPORTANT
+        print("Error:", e)
+
+    finally:
+        cursor.close()
+        db.close()
 
     
 
