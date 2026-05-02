@@ -83,7 +83,8 @@ def getUserByToken():
 @app.route('/')
 def index():
     # return render_template('user/user_home.html',user_logged_in=False)
-    return "Website is live "
+    return render_template('user/user_home.html', user_logged_in=False)
+    
 
 
 #login route
