@@ -82,8 +82,10 @@ def getUserByToken():
 # index route
 @app.route('/')
 def index():
+    products = getProductsFromDB()
+    return str(products)
     # return render_template('user/user_home.html',user_logged_in=False)
-    return render_template('user/user_home.html', user_logged_in=False)
+
     
 
 
