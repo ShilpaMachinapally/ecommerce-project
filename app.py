@@ -82,8 +82,8 @@ def getUserByToken():
 # index route
 @app.route('/')
 def index():
-    return render_template('user/user_home.html',
-                            user_logged_in=False)
+    # return render_template('user/user_home.html',user_logged_in=False)
+    return "Website is live "
 
 
 # login route
@@ -815,6 +815,5 @@ def user_logout():
 
 # main
 if __name__ == "__main__":
-    createTables()
     app.run(host="0.0.0.0", port=10000, debug=True)
     
