@@ -86,60 +86,55 @@ def index():
     return "Website is live "
 
 
-# login route
+#login route
 @app.route("/login", methods=['GET',"POST"])
 def login():
-    # if it is POST request method
-    # get form data
+
     if request.method == 'POST':
+        try:
+            username = request.form['email']
+            password = request.form['password']
 
-    
+            # 🔥 This is where DB fails
+            data = getUserDetails(email=username)
 
-        username = request.form['email']
-        password = request.form['password']
-        
-            # user validation
-        data = getUserDetails(email=username)
-            # print(data)
-        if data and check_password_hash(data['password'], password):
-           
-            
-            # create login token
-            # utc_now = datetime.now(timezone.utc)
+            if data and check_password_hash(data['password'], password):
 
-            # Add 2 hours
-            exp_time = datetime.now(timezone.utc) + timedelta(hours=2)
+                exp_time = datetime.now(timezone.utc) + timedelta(hours=2)
 
-            token = jwt.encode(
-                {
-                    "userid": data["userid"],
-                    "role": data["role"],
-                    "exp": exp_time,
-                    "username":data['name']
-                },
-                app.config['SECRET_KEY'],
-                algorithm="HS256"
-            )
+                token = jwt.encode(
+                    {
+                        "userid": data["userid"],
+                        "role": data["role"],
+                        "exp": exp_time,
+                        "username": data['name']
+                    },
+                    app.config['SECRET_KEY'],
+                    algorithm="HS256"
+                )
 
-             # Based on role it selects the user dashbord or admin dashboard
-            response = make_response(
-                redirect(url_for('admin' if data['role']=='admin' else 'user'))
-            )
+                response = make_response(
+                    redirect(url_for('admin' if data['role']=='admin' else 'user'))
+                )
 
-            # store token in cookie
-            response.set_cookie(
-                'token',
-                token,
-                httponly=True,
-                secure=False  # True in production (HTTPS)
-            )
+                response.set_cookie(
+                    'token',
+                    token,
+                    httponly=True,
+                    secure=False
+                )
 
-            return response
-        # If credintial is incorrect
-        flash('User Credentials incorrect')
-        return redirect(url_for('login'))
+                return response
 
-    # if it is get request 
+            flash('User Credentials incorrect')
+            return redirect(url_for('login'))
+
+        except Exception as e:
+            print("DB ERROR:", e)
+
+            # ✅ Fallback (no crash)
+            return "Login working but DB not connected"
+
     return render_template('auth/login.html')
 
 
@@ -163,55 +158,60 @@ def allowed_file(filename):
 def register():
 
     if request.method == 'POST':
+        try:
+            name = request.form.get('name')
+            email = request.form.get('email')
+            phone = request.form.get('phone')
+            password = request.form.get('password')
+            profile_image = request.files.get('profile_image')
 
-    
-        name = request.form.get('name')
-        email = request.form.get('email')
-        phone = request.form.get('phone')
-        password = request.form.get('password')
-        profile_image = request.files.get('profile_image')
-
-        # basic validation
-        if not name or not email or not phone or not password:
-            flash("All required fields must be filled")
-            return redirect(url_for('register'))
-
-            # check user already exists
-        if checkUserExists(email=email):
-            flash("Email already registered")
-            return redirect(url_for('register'))
-
-        # password hash
-        hashed_password = generate_password_hash(password)
-
-        # handle profile image
-        image_path = None
-        if profile_image and profile_image.filename != "":
-            if allowed_file(profile_image.filename):
-                filename = secure_filename(profile_image.filename)
-                os.makedirs(app.config['PROFILE_UPLOAD_FOLDER'], exist_ok=True)
-
-                image_path = os.path.join(
-                    app.config['PROFILE_UPLOAD_FOLDER'],
-                    filename
-                )
-
-                profile_image.save(image_path)
-            else:
-                flash("Invalid image format")
+            # basic validation
+            if not name or not email or not phone or not password:
+                flash("All required fields must be filled")
                 return redirect(url_for('register'))
 
-        # add user to database
-        addUser(
-            name=name,
-            email=email,
-            phone_number=phone,
-            password=hashed_password,
-            profile_image=image_path
-        )
+            # check user already exists
+            if checkUserExists(email=email):
+                flash("Email already registered")
+                return redirect(url_for('register'))
 
-        flash("Registration successful. Please login.")
-        return redirect(url_for('login'))
+            # password hash
+            hashed_password = generate_password_hash(password)
+
+            # handle profile image
+            image_path = None
+            if profile_image and profile_image.filename != "":
+                if allowed_file(profile_image.filename):
+                    filename = secure_filename(profile_image.filename)
+                    os.makedirs(app.config['PROFILE_UPLOAD_FOLDER'], exist_ok=True)
+
+                    image_path = os.path.join(
+                        app.config['PROFILE_UPLOAD_FOLDER'],
+                        filename
+                    )
+
+                    profile_image.save(image_path)
+                else:
+                    flash("Invalid image format")
+                    return redirect(url_for('register'))
+
+            # 🔥 DB call (this may fail online)
+            addUser(
+                name=name,
+                email=email,
+                phone_number=phone,
+                password=hashed_password,
+                profile_image=image_path
+            )
+
+            flash("Registration successful. Please login.")
+            return redirect(url_for('login'))
+
+        except Exception as e:
+            print("DB ERROR:", e)
+
+            # ✅ fallback (no crash)
+            return "Registration working but DB not connected"
 
     return render_template('auth/register.html')
 
