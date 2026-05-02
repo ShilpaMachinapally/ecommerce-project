@@ -92,13 +92,17 @@ def login():
     # if it is POST request method
     # get form data
     if request.method == 'POST':
+
+    
+
         username = request.form['email']
         password = request.form['password']
-       
-        # user validation
+        
+            # user validation
         data = getUserDetails(email=username)
-        # print(data)
+            # print(data)
         if data and check_password_hash(data['password'], password):
+           
             
             # create login token
             # utc_now = datetime.now(timezone.utc)
@@ -159,6 +163,8 @@ def allowed_file(filename):
 def register():
 
     if request.method == 'POST':
+
+    
         name = request.form.get('name')
         email = request.form.get('email')
         phone = request.form.get('phone')
@@ -170,7 +176,7 @@ def register():
             flash("All required fields must be filled")
             return redirect(url_for('register'))
 
-        # check user already exists
+            # check user already exists
         if checkUserExists(email=email):
             flash("Email already registered")
             return redirect(url_for('register'))
